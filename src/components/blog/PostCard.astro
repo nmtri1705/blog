@@ -17,7 +17,11 @@ const minutes = Math.max(1, Math.ceil(readingTime(post.body ?? "").minutes));
 <article class="post-card">
 	<a href={href} class="card-image" tabindex="-1" aria-hidden="true">
 		{coverImage ? (
-			<Image src={coverImage.src} alt="" width={560} height={340} loading="lazy" />
+			typeof coverImage.src === "string" ? (
+				<img src={coverImage.src} alt="" width={560} height={340} loading="lazy" />
+			) : (
+				<Image src={coverImage.src} alt="" width={560} height={340} loading="lazy" />
+			)
 		) : (
 			<div class="cover-fallback">
 				<span>{section === "blue" ? "BLUE TEAM" : "CTF WRITE-UP"}</span>
