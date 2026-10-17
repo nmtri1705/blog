@@ -140,4 +140,19 @@
 	--tw-prose-th-borders: #666;
 }
 
+/* Inline code uses the active theme accent; fenced code keeps its own styling. */
+.prose :not(pre) > code {
+	background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+	color: var(--color-accent);
+	border: none;
+	border-radius: 4px;
+	padding: 0.1em 0.35em;
+	font-weight: 400;
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+	content: none;
+}
+
 
