@@ -1,0 +1,149 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import readingTime from "reading-time";
+import FormattedDate from "@/components/FormattedDate.astro";
+import { getPostUrl } from "@/data/post";
+
+interface Props {
+	post: CollectionEntry<"post">;
+}
+const { post } = Astro.props;
+const { title, description, coverImage, tags, publishDate, draft, section } = post.data;
+const href = getPostUrl(post);
+const minutes = Math.max(1, Math.ceil(readingTime(post.body ?? "").minutes));
+---
+
+<article class="post-card">
+	<a href={href} class="card-image" tabindex="-1" aria-hidden="true">
+		{coverImage ? (
+			<Image src={coverImage.src} alt="" width={560} height={340} loading="lazy" />
+		) : (
+			<div class="cover-fallback">
+				<span>{section === "blue" ? "BLUE TEAM" : "CTF WRITE-UP"}</span>
+				<span class="cover-symbol">
+					{section === "blue" ? "[ defense ]" : "{ capture_the_flag }"}
+				</span>
+				<span>IRIS / FIELD NOTES</span>
+			</div>
+		)}
+	</a>
+	<div class="card-content">
+		<h2>
+			<a href={href}>
+				{draft && "[Draft] "}
+				{title}
+			</a>
+		</h2>
+		<p class="description">{description}</p>
+		<p class="card-meta">
+			<FormattedDate date={publishDate} />
+			<span aria-hidden="true">·</span>
+			<span>{minutes} min read</span>
+		</p>
+		{tags.length > 0 && (
+			<ul class="card-tags" aria-label="Tags">
+				{tags.slice(0, 5).map((tag) => (
+					<li>
+						<a href={`/tags/${tag}/`}># {tag}</a>
+					</li>
+				))}
+				{tags.length > 5 && (
+					<li>
+						<a href={href}>+{tags.length - 5} more</a>
+					</li>
+				)}
+			</ul>
+		)}
+	</div>
+</article>
+
+<style>
+	.post-card {
+		display: grid;
+		gap: 1.5rem;
+		padding: 1.25rem;
+		border: 1px solid color-mix(in srgb, var(--color-muted) 35%, transparent);
+		border-radius: 0.65rem;
+		transition: border-color 0.2s;
+	}
+	.post-card:hover,
+	.post-card:focus-within {
+		border-color: var(--color-accent);
+	}
+	.card-image {
+		overflow: hidden;
+		border-radius: 0.3rem;
+		align-self: start;
+	}
+	.card-image :global(img) {
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		object-fit: cover;
+	}
+	.cover-fallback {
+		aspect-ratio: 16 / 10;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		padding: 1.25rem;
+		background: linear-gradient(
+			135deg,
+			color-mix(in srgb, var(--color-accent) 18%, var(--color-global-bg)),
+			var(--color-global-bg)
+		);
+		color: var(--color-accent);
+		font-size: 0.65rem;
+		letter-spacing: 0.08em;
+	}
+	.cover-symbol {
+		font-size: 0.85rem;
+		letter-spacing: 0;
+	}
+	h2 {
+		font-size: 1.15rem;
+		font-weight: 700;
+		line-height: 1.5;
+		color: var(--color-accent-2);
+	}
+	h2 a:hover {
+		color: var(--color-accent);
+	}
+	.description {
+		margin-top: 0.6rem;
+		line-height: 1.7;
+		color: var(--color-muted);
+		overflow-wrap: anywhere;
+	}
+	.card-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.65rem;
+		margin-top: 0.75rem;
+		font-size: 0.75rem;
+		color: var(--color-muted);
+	}
+	.card-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-top: 1rem;
+		font-size: 0.75rem;
+	}
+	.card-tags a {
+		display: block;
+		padding: 0.15rem 0.5rem;
+		border-radius: 0.25rem;
+		background: color-mix(in srgb, var(--color-muted) 12%, transparent);
+	}
+	.card-tags a:hover {
+		color: var(--color-accent);
+	}
+	@media (min-width: 640px) {
+		.post-card {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+			align-items: center;
+			padding: 1.5rem;
+		}
+	}
+</style>

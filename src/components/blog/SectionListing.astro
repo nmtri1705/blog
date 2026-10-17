@@ -1,0 +1,29 @@
+---
+import type { CollectionEntry } from "astro:content";
+import PostCard from "./PostCard.astro";
+interface Props {
+	title: string;
+	description: string;
+	posts: CollectionEntry<"post">[];
+}
+const { title, description, posts } = Astro.props;
+---
+
+<header class="mb-10">
+	<h1 class="title mb-3">{title}</h1>
+	<p class="text-muted leading-7">{description}</p>
+</header>
+{posts.length ? (
+	<ul class="space-y-5" role="list">
+		{posts.map((post) => (
+			<li>
+				<PostCard post={post} />
+			</li>
+		))}
+	</ul>
+) : (
+	<div class="rounded-lg border border-dashed border-muted/40 px-6 py-12 text-center">
+		<p class="text-accent-2 font-semibold">Nothing published yet.</p>
+		<p class="text-muted mt-2">New write-ups are on the way.</p>
+	</div>
+)}

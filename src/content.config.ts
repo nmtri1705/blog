@@ -17,10 +17,11 @@ const post = defineCollection({
 	schema: ({ image }) =>
 		baseSchema.extend({
 			description: z.string(),
+			section: z.enum(["posts", "blue"]).default("posts"),
 			coverImage: z
 				.object({
 					alt: z.string(),
-					src: image(),
+					src: z.union([z.string().startsWith("/"), image()]),
 				})
 				.optional(),
 			draft: z.boolean().default(false),

@@ -1,5 +1,9 @@
 import { type CollectionEntry, getCollection } from "astro:content";
 
+export function getPostUrl(post: CollectionEntry<"post">): string {
+	return `/${post.data.section}/${post.id}/`;
+}
+
 /** filter out draft posts based on the environment */
 export async function getAllPosts(): Promise<CollectionEntry<"post">[]> {
 	return await getCollection("post", ({ data }) => {

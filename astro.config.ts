@@ -83,6 +83,13 @@ export default defineConfig({
 		}),
 	},
 	vite: {
+		// WSL may miss file events when editors modify files on a Windows drive.
+		server: {
+			watch: {
+				usePolling: process.platform === "linux" && process.cwd().startsWith("/mnt/"),
+				interval: 500,
+			},
+		},
 		plugins: [tailwind(), rawFonts([".ttf", ".woff"])],
 	},
 	env: {
