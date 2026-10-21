@@ -6,17 +6,170 @@ import TOCHeading from "./TOCHeading.astro";
 interface Props {
 	headings: MarkdownHeading[];
 }
-
 const { headings } = Astro.props;
-
 const toc = generateToc(headings);
 ---
 
-<details open class="min-w-0 lg:sticky lg:top-12 lg:col-start-2 lg:row-start-1">
-	<summary class="title hover:marker:text-accent cursor-pointer text-lg">Table of Contents</summary>
-	<nav class="ms-4 lg:w-full">
-		<ol class="mt-4">
-			{toc.map((heading) => <TOCHeading heading={heading} />)}
-		</ol>
-	</nav>
-</details>
+<article-toc class="min-w-0 lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1">
+	<details open>
+		<summary class="title hover:marker:text-accent cursor-pointer text-lg">
+			Table of Contents
+		</summary>
+		<nav aria-label="Table of Contents" tabindex="0">
+			<ol>
+				{toc.map((heading) => (
+					<TOCHeading heading={heading} />
+				))}
+			</ol>
+		</nav>
+	</details>
+</article-toc>
+
+<style>
+	article-toc {
+		display: block;
+	}
+	summary {
+		padding-block: 0.5rem;
+	}
+	nav {
+		max-height: min(50dvh, 28rem);
+		overflow-y: auto;
+		overscroll-behavior-y: contain;
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-muted) transparent;
+		scrollbar-gutter: stable;
+		margin-top: 0.5rem;
+		padding: 0.25rem;
+	}
+	nav :global(ol) {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	nav :global(ol ol) {
+		margin-inline-start: 0.65rem;
+		padding-inline-start: 0.5rem;
+		border-inline-start: 1px solid color-mix(in srgb, var(--color-muted) 30%, transparent);
+	}
+	nav :global(a) {
+		display: block;
+		padding: 0.45rem 0.5rem;
+		margin-block: 0.15rem;
+		border-inline-start: 2px solid transparent;
+		border-radius: 0.2rem;
+		font-size: 0.8rem;
+		line-height: 1.55;
+		overflow-wrap: anywhere;
+		text-decoration: none;
+	}
+	nav :global(a:hover) {
+		color: var(--color-accent);
+		background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+	}
+	nav :global(a[aria-current="location"]) {
+		color: var(--color-accent);
+		border-inline-start-color: var(--color-accent);
+		background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+		font-weight: 600;
+	}
+	nav:focus-visible,
+	nav :global(a:focus-visible),
+	summary:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+	}
+	@media (min-width: 64rem) {
+		nav {
+			max-height: calc(100dvh - 8rem);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		:global(html) {
+			scroll-behavior: auto;
+		}
+	}
+</style>
+
+<script>
+	class ArticleToc extends HTMLElement {
+		private cleanup?: () => void;
+
+		connectedCallback() {
+			this.cleanup?.();
+			const nav = this.querySelector<HTMLElement>("nav");
+			const body = this.closest("article")?.querySelector<HTMLElement>("[data-article-content]");
+			if (!nav || !body) return;
+
+			const entries = Array.from(this.querySelectorAll<HTMLAnchorElement>("a[data-toc-id]"))
+				.map((link) => ({ link, heading: document.getElementById(link.dataset.tocId!) }))
+				.filter(
+					(entry): entry is { link: HTMLAnchorElement; heading: HTMLElement } =>
+						entry.heading !== null && body.contains(entry.heading),
+				);
+			if (!entries.length) return;
+
+			let frame = 0;
+			let active = -1;
+			const update = () => {
+				frame = 0;
+				// Binary search avoids measuring every heading on each scroll frame.
+				let low = 0;
+				let high = entries.length - 1;
+				let next = -1;
+				while (low <= high) {
+					const middle = (low + high) >> 1;
+					if (entries[middle]!.heading.getBoundingClientRect().top <= 80) {
+						next = middle;
+						low = middle + 1;
+					} else {
+						high = middle - 1;
+					}
+				}
+				if (
+					window.scrollY > 0 &&
+					window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2
+				) {
+					next = entries.length - 1;
+				}
+				if (next === active) return;
+				entries[active]?.link.removeAttribute("aria-current");
+				active = next;
+				if (active < 0) return;
+				const link = entries[active]?.link;
+				if (!link) return;
+				link.setAttribute("aria-current", "location");
+				// Follow the reading position without moving the page or interrupting sidebar browsing.
+				if (matchMedia("(min-width: 64rem)").matches && !nav.matches(":hover, :focus-within")) {
+					const linkRect = link.getBoundingClientRect();
+					const navRect = nav.getBoundingClientRect();
+					if (linkRect.top < navRect.top || linkRect.bottom > navRect.bottom) {
+						nav.scrollTop +=
+							linkRect.top - navRect.top - nav.clientHeight / 2 + linkRect.height / 2;
+					}
+				}
+			};
+			const schedule = () => {
+				if (!frame) frame = requestAnimationFrame(update);
+			};
+			window.addEventListener("scroll", schedule, { passive: true });
+			window.addEventListener("resize", schedule);
+			window.addEventListener("hashchange", schedule);
+			const observer = new ResizeObserver(schedule);
+			observer.observe(body);
+			schedule();
+			this.cleanup = () => {
+				cancelAnimationFrame(frame);
+				observer.disconnect();
+				window.removeEventListener("scroll", schedule);
+				window.removeEventListener("resize", schedule);
+				window.removeEventListener("hashchange", schedule);
+			};
+		}
+
+		disconnectedCallback() {
+			this.cleanup?.();
+		}
+	}
+	if (!customElements.get("article-toc")) customElements.define("article-toc", ArticleToc);
+</script>
