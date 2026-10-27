@@ -13,6 +13,8 @@ coverImage:
 
 # Walkthrough
 I inspected the output of `pslist` and `cmdline` and identified a suspicious process named `ReviewClient.exe`.
+![pslist](/images/Day0/pslist.png)
+![cmdline](/images/Day0/cmdline.png)
 I then examined the `malfind` output and identified shellcode in a private executable memory region of `ReviewClient.exe` process.
 
 ```shell
