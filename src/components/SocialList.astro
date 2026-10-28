@@ -22,26 +22,42 @@ const socialLinks: {
 		link: "https://hackmd.io/@vLj1k_Q_TJaEyvEc8dlh1g",
 		name: "mdi:notebook-edit-outline",
 	},
+	{
+		friendlyName: "HackTheBox",
+		link: "https://app.hackthebox.com/users/3035767",
+		name: "htb",
+	},
+	{
+		friendlyName: "TryHackMe",
+		link: "https://tryhackme.com/p/Iri5?utm_campaign=social_share&utm_medium=social&utm_content=profile&cardVersion=4dee90a3649d&utm_source=copy&sharerId=688deef8ea0a146879979805",
+		name: "thm",
+	},
+
+	
 ];
 ---
 
 <div class="flex flex-wrap items-end gap-x-2">
-	<p>Find me on</p>
-	<ul class="flex flex-1 items-center gap-x-2 sm:flex-initial">
-		{
-			socialLinks.map(({ friendlyName, isWebmention, link, name }) => (
-				<li class="flex">
-					<a
-						class="hover:text-link inline-block"
-						href={link}
-						rel={`noreferrer ${isWebmention ? "me authn" : ""}`}
-						target="_blank"
-					>
-						<Icon aria-hidden="true" class="h-8 w-8" focusable="false" name={name} />
-						<span class="sr-only">{friendlyName}</span>
-					</a>
-				</li>
-			))
-		}
-	</ul>
+  <p>Find me on</p>
+  <ul class="flex flex-1 items-center gap-x-2 sm:flex-initial">
+    {socialLinks.map(({ friendlyName, isWebmention, link, name }) => (
+      <li class="flex">
+        <a
+          class="hover:text-link inline-block"
+          href={link}
+          rel={`noreferrer ${isWebmention ? "me authn" : ""}`}
+          target="_blank"
+        >
+          {name === "htb" ? (
+            <img src="/images/htb.svg" alt="" class="h-8 w-8" aria-hidden="true" />
+          ) : name === "thm" ? (
+            <img src="/images/thm.svg" alt="" class="h-8 w-8" aria-hidden="true" />
+          ) : (
+            <Icon aria-hidden="true" class="h-8 w-8" focusable="false" name={name} />
+          )}
+          <span class="sr-only">{friendlyName}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
 </div>
