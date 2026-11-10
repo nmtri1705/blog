@@ -4,7 +4,7 @@ description: "Forensic Challenges"
 publishDate: "2026-09-15"
 section: "posts"
 tags: ["ctf", "forensic"]
-draft: false
+draft: true
 coverImage:
   src: "/images//wannagame-cyberknight-2026/thumbnail.png"
   alt: "thumbnail"
